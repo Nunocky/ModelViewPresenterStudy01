@@ -51,6 +51,7 @@ public class MainActivityFragment extends ListFragment {
     public void onResume() {
         super.onResume();
         presenter.takeView(this);
+        presenter.startQuery();
     }
 
     @Override

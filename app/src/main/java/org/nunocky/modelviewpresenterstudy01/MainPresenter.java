@@ -12,7 +12,6 @@ public class MainPresenter {
 
     public MainPresenter() {
         model = new RandomNumberModel();
-        startQuery();
     }
 
     public void takeView(@Nullable MainActivityFragment fragment) {

@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class RandomNumberModel {
-    private static final String TAG = "RandomNumberModel";
-
     private ArrayList<String> mResult;
     private boolean mRunning = false;
 

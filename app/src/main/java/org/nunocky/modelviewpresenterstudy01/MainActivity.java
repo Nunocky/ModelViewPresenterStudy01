@@ -62,9 +62,7 @@ public class MainActivity extends AppCompatActivity {
         return super.getSystemService(name);
     }
 
-    private String getScopeName() {
-        return getClass().getSimpleName();
-    }
-
-
+    // private String getScopeName() {
+    //     return getClass().getSimpleName();
+    // }
 }
