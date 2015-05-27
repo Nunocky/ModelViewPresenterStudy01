@@ -1,80 +1,70 @@
 package org.nunocky.modelviewpresenterstudy01;
 
 import android.os.Bundle;
+import android.os.PersistableBundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.FrameLayout;
 
-import java.util.ArrayList;
-
+import mortar.MortarScope;
+import mortar.bundler.BundleServiceRunner;
 
 public class MainActivity extends AppCompatActivity {
-    private static MainPresenter presenter;
 
-    MainActivityFragment fragment;
+    private MortarScope activityScope;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (savedInstanceState == null) {
-            setContentView(new FrameLayout(this));
-            fragment = new MainActivityFragment();
-            getSupportFragmentManager().beginTransaction().replace(android.R.id.content, fragment, "fragment").commit();
-        } else {
-            fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentByTag("fragment");
+        String scopeName = getLocalClassName() + "-task-" + getTaskId();
+        MortarScope parentScope = MortarScope.getScope(getApplication());
+        activityScope = parentScope.findChild(scopeName);
+
+        if (activityScope == null) {
+            activityScope = parentScope.buildChild()
+                    .withService(BundleServiceRunner.SERVICE_NAME, new BundleServiceRunner())
+                    .build(scopeName);
         }
 
-        if (presenter == null) {
-            presenter = new MainPresenter();
+        BundleServiceRunner.getBundleServiceRunner(this).onCreate(savedInstanceState);
+
+        if (savedInstanceState == null) {
+            setContentView(new FrameLayout(this));
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(android.R.id.content, new MainActivityFragment(), "fragment")
+                    .commit();
         }
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        presenter.takeView(this);
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        BundleServiceRunner.getBundleServiceRunner(this).onSaveInstanceState(outState);
     }
 
     @Override
     protected void onDestroy() {
+        if (isFinishing() && activityScope != null) {
+            activityScope.destroy();
+        }
+
         super.onDestroy();
-        presenter.takeView(null);
-        if (isFinishing()) {
-            presenter = null;
-        }
     }
 
-    public void updateView(final ArrayList<String> list) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                fragment.onUpdateView(list);
-            }
-        });
-    }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    public Object getSystemService(@NonNull String name) {
+        if (activityScope != null && activityScope.hasService(name))
+            return activityScope.getService(name);
+
+        return super.getSystemService(name);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            presenter.reload();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+    private String getScopeName() {
+        return getClass().getSimpleName();
     }
+
+
 }

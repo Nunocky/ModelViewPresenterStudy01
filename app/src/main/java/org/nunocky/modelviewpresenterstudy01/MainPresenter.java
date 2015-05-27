@@ -5,31 +5,29 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 
 public class MainPresenter {
-    private static final String TAG = "MainPresenter";
-
     RandomNumberModel model;
 
     @Nullable
-    private MainActivity mMainActivity;
+    private MainActivityFragment mFragment;
 
     public MainPresenter() {
+        model = new RandomNumberModel();
+        startQuery();
     }
 
-    public void takeView(@Nullable MainActivity mainActivity) {
-        if (model == null) {
-            model = new RandomNumberModel();
-            startQuery();
-        }
-
-        mMainActivity = mainActivity;
+    public void takeView(@Nullable MainActivityFragment fragment) {
+        mFragment = fragment;
         updateView(model.getResult());
     }
 
-    private void updateView(ArrayList<String> list) {
-        if (mMainActivity != null) {
-            if (model != null) {
-                mMainActivity.updateView(list);
-            }
+    private void updateView(final ArrayList<String> list) {
+        if (mFragment != null) {
+            mFragment.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mFragment.updateView(list);
+                }
+            });
         }
     }
 
@@ -43,7 +41,6 @@ public class MainPresenter {
     }
 
     public void startQuery() {
-
         model.query(new RandomNumberModel.Listener() {
             @Override
             public void callback(final ArrayList<String> list) {
